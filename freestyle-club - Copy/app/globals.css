@@ -1,0 +1,328 @@
+@import "tailwindcss";
+
+/* ── Tema: boje (izlažu se i kao CSS varijable --color-*) ─────────────── */
+@theme {
+  --color-ink: #06030d;
+  --color-ink-2: #0c0518;
+  --color-ink-3: #120726;
+
+  --color-neon-cyan: #22e1ff;
+  --color-neon-magenta: #ff2e9a;
+  --color-neon-pink: #ff4fd8;
+  --color-neon-violet: #a855f7;
+  --color-neon-purple: #7c3aed;
+
+  --color-background: #06030d;
+  --color-foreground: #f3eefb;
+}
+
+/* ── Tema: fontovi (referenciraju next/font runtime varijable) ────────── */
+@theme inline {
+  --font-display: var(--font-unbounded);
+  --font-sans: var(--font-inter);
+}
+
+/* ── Bazni sloj ───────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  /* Tvrda brana protiv horizontalnog preliva (mobilni "zoom-out" efekat) */
+  overflow-x: clip;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: clip;
+  width: 100%;
+}
+
+/* Atmosferski neon gradijenti na FIKSNOM sloju (bez background-attachment:fixed
+   koji pravi lag pri skrolovanju). Ovaj sloj se ne preslikava na svaki scroll. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(60rem 60rem at 10% -10%, rgba(124, 58, 237, 0.22), transparent 60%),
+    radial-gradient(50rem 50rem at 100% 0%, rgba(34, 225, 255, 0.14), transparent 55%),
+    radial-gradient(60rem 60rem at 50% 120%, rgba(255, 46, 154, 0.16), transparent 60%);
+}
+
+::selection {
+  background: var(--color-neon-magenta);
+  color: #0a0a0a;
+}
+
+/* Lepši scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-ink);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--color-neon-purple), var(--color-neon-magenta));
+  border-radius: 999px;
+}
+
+/* ── Pomoćne klase za neon efekte ─────────────────────────────────────── */
+
+/* Neon glow na tekstu — koristi trenutnu boju teksta */
+.text-glow {
+  text-shadow:
+    0 0 0.35em currentColor,
+    0 0 1.1em color-mix(in srgb, currentColor 60%, transparent);
+}
+.text-glow-soft {
+  text-shadow: 0 0 0.6em color-mix(in srgb, currentColor 45%, transparent);
+}
+
+/* Glassy tamni panel */
+.panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+/* Neon CTA dugme */
+.btn-neon {
+  position: relative;
+  background: linear-gradient(120deg, var(--color-neon-magenta), var(--color-neon-purple));
+  color: #fff;
+  box-shadow:
+    0 0 1.4em color-mix(in srgb, var(--color-neon-magenta) 55%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+.btn-neon:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow:
+    0 0 2.4em color-mix(in srgb, var(--color-neon-magenta) 75%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.btn-neon:active {
+  transform: translateY(0);
+}
+
+/* Neon obrub (outline dugme / kartica) */
+.btn-outline-neon {
+  border: 1px solid color-mix(in srgb, var(--color-neon-cyan) 70%, transparent);
+  color: var(--color-neon-cyan);
+  box-shadow: inset 0 0 0.8em rgba(34, 225, 255, 0.08);
+  transition: background 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+}
+.btn-outline-neon:hover {
+  background: rgba(34, 225, 255, 0.08);
+  box-shadow:
+    0 0 1.4em rgba(34, 225, 255, 0.35),
+    inset 0 0 0.8em rgba(34, 225, 255, 0.15);
+}
+
+/* Glow oko kartica po akcentu */
+.glow-cyan {
+  box-shadow: 0 0 0 1px rgba(34, 225, 255, 0.25), 0 18px 60px -20px rgba(34, 225, 255, 0.45);
+}
+.glow-magenta {
+  box-shadow: 0 0 0 1px rgba(255, 46, 154, 0.28), 0 18px 60px -20px rgba(255, 46, 154, 0.5);
+}
+.glow-violet {
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.28), 0 18px 60px -20px rgba(168, 85, 247, 0.5);
+}
+
+/* Animirani neon "blobovi" u pozadini hero-a */
+.neon-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(46px);
+  opacity: 0.45;
+  will-change: transform;
+  transform: translateZ(0);
+  animation: blob-float 16s ease-in-out infinite;
+}
+/* Samo translacija (bez scale) — skaliranje zamućenog (blur) sloja tera
+   pregledač da preračunava blur svaki frame; translacija pomera keširan sloj. */
+@keyframes blob-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  33% { transform: translate3d(5%, -7%, 0); }
+  66% { transform: translate3d(-5%, 5%, 0); }
+}
+
+/* Suptilan shimmer preko naslova */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Film grain overlay (preko celog ekrana) */
+/* Film grain — bez mix-blend-mode (koji pravi skupo recompositing na svaki frame).
+   Statičan, jeftin sloj koji se ne preslikava pri skrolovanju. */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* SVG falling items — drop-shadow neon glow */
+.falling-layer {
+  /* Izoluj sloj — promene transformacija stvari ne diraju layout/paint ostatka */
+  contain: layout paint;
+}
+.falling-item {
+  position: absolute;
+  top: 0;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Modal animacije */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-pop-in {
+  animation: pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.25s ease both;
+}
+
+/* ── Polja forme (rezervacije) ────────────────────────────────────────── */
+.input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+  color: var(--color-foreground);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input:focus {
+  border-color: var(--color-neon-cyan);
+  box-shadow: 0 0 0 3px rgba(34, 225, 255, 0.15);
+}
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+.input option {
+  background: var(--color-ink-3);
+  color: var(--color-foreground);
+}
+
+/* ── Tekstualna marquee traka (bešavna na svim širinama) ──────────────────
+   Dve identične grupe, svaka min-width:100% (da nema praznine na širokim
+   ekranima) + justify-content:space-around (lepo se razvuče kad je kraće od
+   ekrana). Svaka grupa klizi za tačno svoju širinu + razmak između grupa,
+   pa druga grupa „uskoči” baš tamo gde je prva počela → savršena petlja. */
+.marquee {
+  display: flex;
+  gap: 2rem;
+  overflow: hidden;
+  user-select: none;
+}
+.marquee__group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-around;
+  gap: 2rem;
+  min-width: 100%;
+  animation: marquee-scroll var(--marquee-duration, 30s) linear infinite;
+  will-change: transform;
+}
+@keyframes marquee-scroll {
+  to {
+    transform: translateX(calc(-100% - 2rem));
+  }
+}
+.marquee-paused .marquee__group {
+  animation-play-state: paused;
+}
+
+/* ── Marquee traka (galerija slika) ──────────────────────────────────────── */
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.animate-marquee {
+  animation: marquee 26s linear infinite;
+  will-change: transform;
+}
+@keyframes marquee-rev {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+.animate-marquee-rev {
+  animation: marquee-rev 30s linear infinite;
+  will-change: transform;
+}
+
+/* Pauziraj galeriju na hover i kad nije u vidokrugu (štedi GPU) */
+.gallery-row:hover .gallery-track,
+.gallery-paused .gallery-track {
+  animation-play-state: paused;
+}
+
+/* Pauziraj hero blobove kad hero nije u vidokrugu */
+.hero-paused .neon-blob {
+  animation-play-state: paused;
+}
+
+/* ── Hero naslov: slova ───────────────────────────────────────────────── */
+.hero-title {
+  perspective: 700px;
+}
+.hero-letter {
+  display: inline-block;
+  transform-origin: 50% 100%;
+}
+
+/* ── Reduced motion: gasi animacije, krije dekorativni sloj ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .falling-layer,
+  .neon-blob {
+    display: none !important;
+  }
+}
